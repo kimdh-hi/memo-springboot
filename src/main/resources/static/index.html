@@ -83,7 +83,7 @@
             </div>
             <input type="hidden" id="post-id">
             <button id="save-button" type="button" class="btn btn-primary" onclick="postMemo()">메모저장</button>
-            <button id="edit-button" type="button" class="btn btn-primary" onclick="editMemo()" style="display: none">
+            <button id="edit-button" type="button" class="btn btn-primary" onclick="memoUpdate()" style="display: none">
                 메모수정
             </button>
         </div>
@@ -92,8 +92,8 @@
     <div style="display: flex; justify-content: space-between">
 
         <div>
-    <button type="button" class="btn btn-primary" onclick="set_type('all')">전체글</button>
-    <button type="button" class="btn btn-light" onclick="set_type('my')">내글</button>
+    <button type="button" class="btn btn-primary" onclick="setViewType(true)">전체글</button>
+    <button type="button" class="btn btn-light" onclick="setViewType(false)">내글</button>
             </div>
 
     <select id="select_page_limit">
@@ -109,8 +109,8 @@
             <th scope="col">#</th>
             <th scope="col">타이틀</th>
             <th scope="col">글쓴이</th>
-            <th scope="col">날짜</th>
-            <th scope="col" onclick="sort()">조회수<span id="sort-icon">⬇</span>️</th>
+            <th scope="col" onclick="sortByDate()">날짜<span id="sort-date-icon">⬇</span></th>
+            <th scope="col" onclick="sortByClickCount()">조회수<span id="sort-click-count-icon">⬇</span></th>
             <th scope="col">삭제</th>
             <th scope="col">수정</th>
         </tr>

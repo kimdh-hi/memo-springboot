@@ -8,9 +8,7 @@ import com.sparta.weeklytestspring.service.MemoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,12 +18,18 @@ import org.springframework.web.bind.annotation.*;
 public class MemoController {
 
     private final MemoService memoService;
-
-    @Secured("ROLE_USER")
+    
     @PostMapping("/memo")
-    public ResponseEntity<String> saveMemo(@RequestBody MemoDto requestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        User user = (User) userDetails.getUser();
-        memoService.saveMemo(requestDto, user);
+    public ResponseEntity<String> saveMemo(
+            @RequestBody MemoDto requestDto,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        if (userDetails != null) {
+            User user = (User) userDetails.getUser();
+            memoService.saveMemo(requestDto, user);
+        } else {
+            memoService.saveMemo(requestDto, true);
+        }
         return ResponseEntity.ok("메모작성 완료");
     }
 
@@ -34,33 +38,43 @@ public class MemoController {
             @RequestParam int page,
             @RequestParam int size,
             @RequestParam boolean isAsc,
-            @RequestParam String type,
+            @RequestParam String field,
+            @RequestParam boolean isPublic,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
-        log.info("memos page = {}, size = {}, isAsc = {}, type = {}", page, size, isAsc, type);
+        log.info("memos page = {}, size = {}, isAsc = {}, type = {}", page, size, isAsc, field);
 
         page--;
 
         Page<Memo> memos;
 
-        if (userDetails == null) {
-            memos = memoService.getMemos(page, size, isAsc, type);
+        if (userDetails != null && !isPublic) {
+            memos = memoService.getMyMemos(page, size, isAsc, field, userDetails.getUser(), isPublic);
         } else {
-            memos = memoService.getMemos(page, size, isAsc, type, userDetails.getUser());
+            memos = memoService.getMemos(page, size, isAsc, field);
         }
         log.info("memos = {}", memos);
         return ResponseEntity.ok().body(memos);
     }
 
-    @GetMapping("/memo")
-    public ResponseEntity<MemoDto> findMemo(@RequestParam Long id) {
-        Memo memo = memoService.getMemo(id);
-        MemoDto memoDto = new MemoDto(memo.getTitle(), memo.getContents(), memo.getClickCount(), memo.getUser().getUsername());
+    @GetMapping("/memo/{memoId}")
+    public ResponseEntity<MemoDto> findMemo(@PathVariable Long memoId) {
+        Memo memo = memoService.getMemo(memoId);
+
+        String username = memo.getUser() == null ? "비회원" : memo.getUser().getUsername();
+
+        MemoDto memoDto = MemoDto.builder()
+                .id(memo.getId())
+                .title(memo.getTitle())
+                .contents(memo.getContents())
+                .clickCount(memo.getClickCount())
+                .username(username)
+                .createdAt(memo.getCreatedAt()).build();
 
         return ResponseEntity.ok().body(memoDto);
     }
 
-    @Secured("ROLE_USER")
+
     @PutMapping("/memo/{memoId}")
     public ResponseEntity<String> updateMemo(@PathVariable Long memoId, @RequestBody MemoDto memoDto) {
         memoService.updateMemo(memoId, memoDto);
@@ -68,7 +82,7 @@ public class MemoController {
         return ResponseEntity.ok().body("success");
     }
 
-    @Secured("ROLE_USER")
+
     @DeleteMapping("/memo/{memoId}")
     public ResponseEntity<String> deleteMemo(@PathVariable Long memoId) {
         memoService.deleteMemo(memoId);

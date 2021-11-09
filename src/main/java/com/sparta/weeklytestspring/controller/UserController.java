@@ -31,7 +31,7 @@ public class UserController {
     private final JwtUtils jwtUtils;
 
     @PostMapping("/signup")
-    public ResponseDto signup(@RequestBody SignupRequestDto requestDto) {
+    public ResponseDto signup(@RequestBody SignupRequestDto requestDto) throws IllegalAccessException {
         log.info("login username = {}", requestDto.getUsername());
         User savedUser = userService.signup(requestDto);
 
@@ -56,5 +56,10 @@ public class UserController {
         String token = jwtUtils.createToken(userDetails.getUsername());
         log.info("로그인 후 토큰 = {}", token);
         return new TokenResponseDto(token, "로그인에 성공했습니다.");
+    }
+
+    @PostMapping("/signup/duplicate")
+    public boolean signupDuplicateCheck(String username) {
+        return userService.isUsernameDuplicate(username);
     }
 }

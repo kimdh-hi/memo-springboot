@@ -24,12 +24,12 @@ public class MemoService {
     private final MemoRepository memoRepository;
 
     @Transactional(readOnly = true)
-    public Page<Memo> getMemos(int page, int size, boolean isAsc, String type, User user) {
+    public Page<Memo> getMyMemos(int page, int size, boolean isAsc, String field, User user, boolean isPublic) {
         Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Sort sort = Sort.by(direction);
+        Sort sort = Sort.by(direction, field);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        if (type.equals("my") && user != null) {
+        if (!isPublic && user != null) {
             return memoRepository.findAllByUser(user.getId(), pageable);
         }
 
@@ -37,9 +37,9 @@ public class MemoService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Memo> getMemos(int page, int size, boolean isAsc, String type) {
+    public Page<Memo> getMemos(int page, int size, boolean isAsc, String field) {
         Sort.Direction direction = isAsc ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Sort sort = Sort.by(direction, "clickCount");
+        Sort sort = Sort.by(direction, field);
         Pageable pageable = PageRequest.of(page, size, sort);
 
         return memoRepository.findAll(pageable);
@@ -48,7 +48,10 @@ public class MemoService {
 
     @Transactional
     public Memo getMemo(Long memoId) {
-        Memo memo = findMemo(memoId);
+        log.info("getMemo id = {}", memoId);
+        Memo memo = memoRepository.findById(memoId).orElseThrow(
+                () -> new IllegalArgumentException("찾을 수 없는 메모입니다.")
+        );
         memo.increaseClickCount();
 
         return memo;
@@ -59,7 +62,20 @@ public class MemoService {
         Memo memo = Memo.builder()
                 .title(requestDto.getTitle())
                 .contents(requestDto.getContents())
+                .clickCount(0L)
                 .user(user)
+                .build();
+
+        memoRepository.save(memo);
+    }
+
+    @Transactional
+    public void saveMemo(MemoDto requestDto, Boolean isAnonymous) {
+        Memo memo = Memo.builder()
+                .title(requestDto.getTitle())
+                .contents(requestDto.getContents())
+                .clickCount(0L)
+                .isAnonymous(true)
                 .build();
 
         memoRepository.save(memo);

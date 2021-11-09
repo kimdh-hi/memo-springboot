@@ -1,8 +1,13 @@
-isAsc = true
+isAsc = false
+sortProperty = "createdAt"
+isClickCountAsc = false
+isDateAsc = false
 size = 5
 token = null
 type = "all"
 current_memo_id = null
+current_page = 1
+isPublic=true
 
 $(document).ready(function() {
 
@@ -18,6 +23,11 @@ $(document).ready(function() {
         $('#signup_btn').show()
         $('#logout_btn').hide()
     }
+
+    $("#select_page_limit").change(function () {
+        size = $(this).val();
+        getMemoList(current_page)
+    })
 
     getMemoList(1)
 
@@ -133,46 +143,169 @@ function postMemo() {
     })
 }
 
+function getMemo(memo_id) {
+    current_memo_id = memo_id
+
+    $.ajax({
+        type: "GET",
+        url: `/memo/${memo_id}`,
+        success: function (res) {
+            let title = res['title']
+            let contents = res['contents']
+            $('#modal-title').html(title);
+            $('#modal-content').html(contents);
+            $('#articleModal').modal('show');
+
+            let comments = res['content']
+
+            $('#modal-comment').empty()
+            for (let i=0;i<comments.length;i++) {
+                let tmp_html = `<li class="list-group-item">${comments[i]['comment']}</li>`
+                $('#modal-comment').append(tmp_html)
+            }
+
+            getMemoList(current_page)
+        }
+    })
+}
+
 function getMemoList(page) {
     $('#memo-body').empty()
 
     $.ajax({
         type: "GET",
-        url: `/memos?page=${page}&size=${size}&isAsc=${isAsc}&type=${type}`,
+        url: `/memos?page=${page}&size=${size}&isAsc=${isAsc}&field=${sortProperty}&isPublic=${isPublic}`,
         success: function (res) {
             console.log(res)
-            memos = res['memos']
+            memos = res['content']
+            current_page = memos['number'] + 1
             for (let i = 0; i < memos.length; i++) {
-                memo_number = (i + 1) + limit * (current_page - 1)
+                memo_number = (i + 1) + res['size'] * res['number']
+                let username = memos[i]['isAnonymous'] ? "비회원" : memos[i]['user']['username']
                 let tmp_html = `<tr>
                                   <th scope="row">${memo_number}</th>
-                                  <td><a onclick="getMemo('${memos[i]['memo_id']}')">${memos[i]['title']}</a></td>
-                                  <td>${memos[i]['writer_id']}</td>
-                                  <td>${memos[i]['date']}</td>
+                                  <td><a onclick="getMemo('${memos[i]['id']}')">${memos[i]['title']}</a></td>
+                                  <td>${username}</td>
+                                  <td>${memos[i]['createdAt']}</td>
                                   <td>${memos[i]['clickCount']}</td>
                                   <td>
-                                    <button onclick="delete_memo('${memos[i]['memo_id']}')" type="button" class="btn btn-danger">삭제</button>
+                                    <button onclick="deleteMemo('${memos[i]['id']}')" type="button" class="btn btn-danger">삭제</button>
                                   </td>
                                   <td>
-                                    <button onclick="show_memo_edit_form('${memos[i]['memo_id']}')" type="button" class="btn btn-primary">수정</button>
+                                    <button onclick="showUpdateMemoForm('${memos[i]['id']}')" type="button" class="btn btn-primary">수정</button>
                                   </td>
                                 </tr>`
                 $('#memo-table').append(tmp_html)
 
-                makePagingButtons(res['paging'])
+                makePagingButtons(res['totalPages'], res['number']+1)
             }
-
         }
     })
 }
 
-function set_type(type_param) {
-    if (type_param == "my" && token == null) return false
+function makePagingButtons(total_page, page) {
+    $('#pagination-buttons').empty()
+    current_page = page
+    tmp_html = ``
+    for (let i = 0; i < total_page; i++) {
+        if (current_page == i + 1) {
+            tmp_html = `<li class="page-item active"><a class="page-link" onclick="getMemoList('${i + 1}')">${i + 1}</a></li>`
+        } else {
+            tmp_html = `<li class="page-item"><a class="page-link" onclick="getMemoList('${i + 1}')">${i + 1}</a></li>`
+        }
 
-    if (type_param == type) return false
+        $('#pagination-buttons').append(tmp_html)
+    }
+}
 
-    type = type_param
-    getMemos(1)
+function deleteMemo(memoId) {
+    $.ajax({
+        type: "DELETE",
+        url: `/memo/${memoId}`,
+        success: function(res) {
+            console.log(res)
+            getMemoList(current_page)
+        }
+    })
+}
+
+function showUpdateMemoForm(memo_id) {
+    $.ajax({
+        type: "GET",
+        url: `/memo/${memo_id}`,
+        success: function (res) {
+            let memo_id = res['id']
+            let title = res['title']
+            let contents = res['contents']
+
+            current_memo_id = memo_id
+
+            $("#post-id").val(memo_id)
+            $("#post-title").val(title)
+            $('#post-comment').val(contents)
+            $('#btn-post-box').text("포스트 박스 닫기")
+
+            $('#edit-button').show()
+            $('#save-button').hide()
+
+            $('#post-box').show()
+        }
+    })
+}
+
+function memoUpdate() {
+    memo_id = $('#post-id').val()
+    title = $('#post-title').val()
+    contents = $('#post-comment').val()
+    dic = {
+        "title": title,
+        "contents": contents
+    }
+    $.ajax({
+        type: "PUT",
+        url: `/memo/${memo_id}`,
+        contentType: "application/json; charset=utf-8;",
+        data: JSON.stringify(dic),
+        success: function (res) {
+            alert(res)
+            window.location.reload()
+        }
+    })
+}
+
+function sortByClickCount() {
+    if (isClickCountAsc) {
+        isClickCountAsc = false
+        isAsc = false
+        sortProperty = "clickCount"
+        $('#sort-click-count-icon').text("⬇️")
+    } else {
+        isClickCountAsc = true
+        isAsc = true
+        sortProperty = "clickCount"
+        $('#sort-click-count-icon').text("⬆️")
+    }
+    getMemoList(current_page)
+}
+
+function sortByDate() {
+    if (isDateAsc) {
+        isDateAsc = false
+        isAsc = false
+        sortProperty = "createdAt"
+        $('#sort-date-icon').text("⬇️")
+    } else {
+        isDateAsc = true
+        isAsc = true
+        sortProperty = "createdAt"
+        $('#sort-date-icon').text("⬆️")
+    }
+    getMemoList(current_page)
+}
+
+function setViewType(flag) {
+    isPublic = flag
+    getMemoList(current_page)
 }
 
 function saveComment() {

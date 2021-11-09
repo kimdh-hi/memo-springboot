@@ -26,16 +26,19 @@ public class Memo extends Timestamp {
 
     private Long clickCount;
 
-    @JoinColumn(name = "user_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
+    private Boolean isAnonymous;
+
+    @JoinColumn(name = "user_id")
+    @ManyToOne
     private User user;
 
     @Builder
-    public Memo(String title, String contents, Long clickCount, User user) {
+    public Memo(String title, String contents, Long clickCount, User user, Boolean isAnonymous) {
         this.title = title;
         this.contents = contents;
         this.clickCount = clickCount;
         this.user = user;
+        this.isAnonymous = isAnonymous;
     }
 
     public void updateMemo(MemoDto memoDto) {
