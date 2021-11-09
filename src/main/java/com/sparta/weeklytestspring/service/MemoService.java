@@ -63,6 +63,7 @@ public class MemoService {
                 .title(requestDto.getTitle())
                 .contents(requestDto.getContents())
                 .clickCount(0L)
+                .isAnonymous(false)
                 .user(user)
                 .build();
 

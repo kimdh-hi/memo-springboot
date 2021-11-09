@@ -5,6 +5,7 @@ import com.sparta.weeklytestspring.domain.Memo;
 import com.sparta.weeklytestspring.domain.User;
 import com.sparta.weeklytestspring.dto.CommentDto;
 import com.sparta.weeklytestspring.dto.MemoDto;
+import com.sparta.weeklytestspring.dto.MemoListDto;
 import com.sparta.weeklytestspring.security.UserDetailsImpl;
 import com.sparta.weeklytestspring.service.CommentService;
 import com.sparta.weeklytestspring.service.MemoService;
@@ -42,7 +43,7 @@ public class MemoController {
     }
 
     @GetMapping("/memos")
-    public ResponseEntity<Page<Memo>> findMemos(
+    public MemoListDto findMemos(
             @RequestParam int page,
             @RequestParam int size,
             @RequestParam boolean isAsc,
@@ -61,8 +62,26 @@ public class MemoController {
         } else {
             memos = memoService.getMemos(page, size, isAsc, field);
         }
-        log.info("memos = {}", memos);
-        return ResponseEntity.ok().body(memos);
+
+        List<MemoDto> memoDtos = memos.stream().map(m -> {
+            return MemoDto.builder()
+                    .id(m.getId())
+                    .title(m.getTitle())
+                    .contents(m.getContents())
+                    .clickCount(m.getClickCount())
+                    .username(m.getIsAnonymous() ? "비회원" : m.getUser().getUsername())
+                    .createdAt(m.getCreatedAt()).build();
+        }).collect(Collectors.toList());
+
+
+        MemoListDto memoList = MemoListDto.builder()
+                .memos(memoDtos)
+                .page(memos.getNumber())
+                .size(memos.getSize())
+                .totalPages(memos.getTotalPages()).build();
+
+        return memoList;
+
     }
 
     @GetMapping("/memo/{memoId}")

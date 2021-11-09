@@ -178,15 +178,14 @@ function getMemoList(page) {
         url: `/memos?page=${page}&size=${size}&isAsc=${isAsc}&field=${sortProperty}&isPublic=${isPublic}`,
         success: function (res) {
             console.log(res)
-            memos = res['content']
-            current_page = memos['number'] + 1
+            memos = res['memos']
+            current_page = memos['page'] + 1
             for (let i = 0; i < memos.length; i++) {
-                memo_number = (i + 1) + res['size'] * res['number']
-                let username = memos[i]['isAnonymous'] ? "비회원" : memos[i]['user']['username']
+                memo_number = (i + 1) + res['size'] * res['page']
                 let tmp_html = `<tr>
                                   <th scope="row">${memo_number}</th>
                                   <td><a onclick="getMemo('${memos[i]['id']}')">${memos[i]['title']}</a></td>
-                                  <td>${username}</td>
+                                  <td>${memos[i]['username']}</td>
                                   <td>${memos[i]['createdAt']}</td>
                                   <td>${memos[i]['clickCount']}</td>
                                   <td>
@@ -198,7 +197,7 @@ function getMemoList(page) {
                                 </tr>`
                 $('#memo-table').append(tmp_html)
 
-                makePagingButtons(res['totalPages'], res['number']+1)
+                makePagingButtons(res['totalPages'], res['page']+1)
             }
         }
     })

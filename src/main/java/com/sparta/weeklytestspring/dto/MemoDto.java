@@ -14,16 +14,10 @@ import java.util.List;
 public class MemoDto {
 
     private Long id;
-
     private String title;
-
     private String contents;
-
     private Long clickCount;
-
     private String username;
-
     private LocalDateTime createdAt;
-
     private List<String> comments = new ArrayList<>();
 }

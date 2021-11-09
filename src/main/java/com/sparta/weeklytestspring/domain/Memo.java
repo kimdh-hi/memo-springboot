@@ -31,7 +31,7 @@ public class Memo extends Timestamp {
     private Boolean isAnonymous;
 
     @JoinColumn(name = "user_id")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
     @Builder
