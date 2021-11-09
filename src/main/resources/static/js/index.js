@@ -150,17 +150,18 @@ function getMemo(memo_id) {
         type: "GET",
         url: `/memo/${memo_id}`,
         success: function (res) {
+            console.log(res)
             let title = res['title']
             let contents = res['contents']
             $('#modal-title').html(title);
             $('#modal-content').html(contents);
             $('#articleModal').modal('show');
 
-            let comments = res['content']
+            let comments = res['comments']
 
             $('#modal-comment').empty()
             for (let i=0;i<comments.length;i++) {
-                let tmp_html = `<li class="list-group-item">${comments[i]['comment']}</li>`
+                let tmp_html = `<li class="list-group-item">${comments[i]}</li>`
                 $('#modal-comment').append(tmp_html)
             }
 
@@ -309,20 +310,21 @@ function setViewType(flag) {
 }
 
 function saveComment() {
-
-    let comment = $('#comment').val()
-
-    console.log(comment)
+    let contents = $('#comment').val()
+    dic = {
+        "contents": contents,
+    }
 
     $.ajax({
         type: "POST",
-        url: "/comment",
-        data: {comment: comment, memo_id: current_memo_id},
+        url: `/comment/${current_memo_id}`,
+        contentType: "application/json;charset=utf-8",
+        data: JSON.stringify(dic),
         success: function (res) {
             if (res.result == "success") {
-                alert(res.msg)
+                alert(res.message)
                 $('#comment').val(' ')
-                let tmp_html = `<li class="list-group-item">${comment}</li>`
+                let tmp_html = `<li class="list-group-item">${contents}</li>`
                 $('#modal-comment').append(tmp_html)
             }
         }

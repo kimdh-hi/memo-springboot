@@ -1,9 +1,12 @@
 package com.sparta.weeklytestspring.controller;
 
+import com.sparta.weeklytestspring.domain.Comment;
 import com.sparta.weeklytestspring.domain.Memo;
 import com.sparta.weeklytestspring.domain.User;
+import com.sparta.weeklytestspring.dto.CommentDto;
 import com.sparta.weeklytestspring.dto.MemoDto;
 import com.sparta.weeklytestspring.security.UserDetailsImpl;
+import com.sparta.weeklytestspring.service.CommentService;
 import com.sparta.weeklytestspring.service.MemoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,12 +15,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RequiredArgsConstructor
 @Slf4j
 @RestController
 public class MemoController {
 
     private final MemoService memoService;
+    private final CommentService commentService;
     
     @PostMapping("/memo")
     public ResponseEntity<String> saveMemo(
@@ -61,6 +69,10 @@ public class MemoController {
     public ResponseEntity<MemoDto> findMemo(@PathVariable Long memoId) {
         Memo memo = memoService.getMemo(memoId);
 
+
+        List<String> comments = commentService.getComments(memoId).stream()
+                .map(c -> String.valueOf(c.getContents())).collect(Collectors.toList());
+
         String username = memo.getUser() == null ? "비회원" : memo.getUser().getUsername();
 
         MemoDto memoDto = MemoDto.builder()
@@ -69,6 +81,7 @@ public class MemoController {
                 .contents(memo.getContents())
                 .clickCount(memo.getClickCount())
                 .username(username)
+                .comments(comments)
                 .createdAt(memo.getCreatedAt()).build();
 
         return ResponseEntity.ok().body(memoDto);
