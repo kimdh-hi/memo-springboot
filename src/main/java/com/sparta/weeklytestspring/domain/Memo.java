@@ -34,6 +34,9 @@ public class Memo extends Timestamp {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
+    @OneToMany(mappedBy = "memo", cascade = CascadeType.ALL)
+    private List<Comment> comments = new ArrayList<>();
+
     @Builder
     public Memo(String title, String contents, Long clickCount, User user, Boolean isAnonymous) {
         this.title = title;
@@ -50,5 +53,10 @@ public class Memo extends Timestamp {
 
     public void increaseClickCount() {
         this.clickCount++;
+    }
+
+    public void addComment(Comment comment){
+        this.getComments().add(comment);
+        comment.setMemo(this);
     }
 }

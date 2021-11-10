@@ -49,9 +49,10 @@ public class MemoService {
     @Transactional
     public Memo getMemo(Long memoId) {
         log.info("getMemo id = {}", memoId);
-        Memo memo = memoRepository.findById(memoId).orElseThrow(
-                () -> new IllegalArgumentException("찾을 수 없는 메모입니다.")
-        );
+//        Memo memo = memoRepository.findById(memoId).orElseThrow(
+//                () -> new IllegalArgumentException("찾을 수 없는 메모입니다.")
+//        );
+        Memo memo = memoRepository.findMemoByMemoId(memoId);
         memo.increaseClickCount();
 
         return memo;

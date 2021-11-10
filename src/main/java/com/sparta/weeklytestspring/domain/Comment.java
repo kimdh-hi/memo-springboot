@@ -1,5 +1,6 @@
 package com.sparta.weeklytestspring.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,6 +22,7 @@ public class Comment extends Timestamp {
     @Column(nullable = false)
     private String contents;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "memo_id")
     private Memo memo;

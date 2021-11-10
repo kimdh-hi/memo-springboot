@@ -24,9 +24,8 @@ public class CommentService {
     public void saveComment(CommentDto commentDto, Long memoId) {
         Memo memo = memoRepository.findById(memoId).get();
         Comment comment = Comment.builder().contents(commentDto.getContents()).build();
-        comment.setMemo(memo);
 
-        commentRepository.save(comment);
+        memo.addComment(comment);
     }
 
     public List<Comment> getComments(Long memoId) {

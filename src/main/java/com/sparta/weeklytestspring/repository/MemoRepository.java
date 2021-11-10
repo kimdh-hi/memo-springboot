@@ -13,4 +13,8 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
 
     @Query("select m from Memo m where m.user.id = :id")
     Page<Memo> findAllByUser(Long id, Pageable pageable);
+
+    @Query("select m from Memo m where m.id = :memoId")
+    Memo findMemoByMemoId(Long memoId);
+
 }
